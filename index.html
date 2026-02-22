@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kirby Math Adventure</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header>
+      <h1>🌟 Kirby Math Adventure 🌟</h1>
+      <p>Help Kirby clear each stage by solving math puzzles!</p>
+    </header>
+
+    <section class="hud">
+      <div class="chip">Level: <span id="level-name">Easy</span></div>
+      <div class="chip">Question <span id="question-index">1</span>/<span id="question-total">5</span></div>
+      <div class="chip">Score: <span id="score">0</span></div>
+      <div class="chip">Hearts: <span id="hearts">❤️❤️❤️</span></div>
+    </section>
+
+    <section class="kirby-panel">
+      <div class="kirby">(づ｡◕‿‿◕｡)づ</div>
+      <div id="kirby-message" class="speech">Let's start with easy math!</div>
+    </section>
+
+    <section class="question-panel">
+      <h2 id="question">2 + 3 = ?</h2>
+      <label for="answer" class="sr-only">Type your answer</label>
+      <input id="answer" type="number" inputmode="numeric" autocomplete="off" />
+      <div class="actions">
+        <button id="submit-btn">Submit</button>
+        <button id="next-btn" disabled>Next</button>
+      </div>
+      <p id="feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="level-guide">
+      <h3>Level Guide</h3>
+      <ul>
+        <li><strong>Easy:</strong> Addition & subtraction within 10</li>
+        <li><strong>Medium:</strong> Addition & subtraction from 11 to 100</li>
+        <li><strong>Hard:</strong> Single-digit multiplication</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
