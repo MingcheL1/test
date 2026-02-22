@@ -1,65 +1,98 @@
-const levels = [
+const stages = [
   {
-    name: "Easy",
-    totalQuestions: 5,
+    name: "Within 10",
+    enemy: "Waddle Dee",
+    enemyImage: "https://static.wikia.nocookie.net/kirby/images/5/57/Waddle_Dee_KatFL_icon.png",
+    totalQuestions: 10,
     generateQuestion() {
-      const isAddition = Math.random() > 0.5;
-      if (isAddition) {
+      const add = Math.random() > 0.5;
+      if (add) {
         const a = randomInt(0, 10);
         const b = randomInt(0, 10 - a);
         return { prompt: `${a} + ${b} = ?`, answer: a + b };
       }
-
       const a = randomInt(0, 10);
       const b = randomInt(0, a);
       return { prompt: `${a} - ${b} = ?`, answer: a - b };
     },
   },
   {
-    name: "Medium",
-    totalQuestions: 5,
+    name: "Within 20",
+    enemy: "Bronto Burt",
+    enemyImage: "https://static.wikia.nocookie.net/kirby/images/e/ed/Kirby_Star_Allies_Bronto_Burt_Artwork.png",
+    totalQuestions: 10,
     generateQuestion() {
-      const isAddition = Math.random() > 0.5;
-      if (isAddition) {
-        const a = randomInt(11, 60);
-        const b = randomInt(11, 100 - a);
+      const add = Math.random() > 0.5;
+      if (add) {
+        const a = randomInt(0, 20);
+        const b = randomInt(0, 20 - a);
         return { prompt: `${a} + ${b} = ?`, answer: a + b };
       }
-
-      const a = randomInt(20, 100);
-      const b = randomInt(11, a - 1);
+      const a = randomInt(0, 20);
+      const b = randomInt(0, a);
       return { prompt: `${a} - ${b} = ?`, answer: a - b };
     },
   },
   {
-    name: "Hard",
-    totalQuestions: 8,
+    name: "Within 100",
+    enemy: "King Dedede",
+    enemyImage: "https://static.wikia.nocookie.net/kirby/images/7/72/KSA_King_Dedede.png",
+    totalQuestions: 10,
+    generateQuestion() {
+      const add = Math.random() > 0.5;
+      if (add) {
+        const a = randomInt(0, 100);
+        const b = randomInt(0, 100 - a);
+        return { prompt: `${a} + ${b} = ?`, answer: a + b };
+      }
+      const a = randomInt(0, 100);
+      const b = randomInt(0, a);
+      return { prompt: `${a} - ${b} = ?`, answer: a - b };
+    },
+  },
+  {
+    name: "Single Digit Multiply",
+    enemy: "Meta Knight",
+    enemyImage: "https://static.wikia.nocookie.net/kirby/images/e/e4/KSA_Meta_Knight.png",
+    totalQuestions: 10,
     generateQuestion() {
       const a = randomInt(1, 9);
       const b = randomInt(1, 9);
       return { prompt: `${a} × ${b} = ?`, answer: a * b };
     },
   },
+  {
+    name: "Single Digit Divide",
+    enemy: "Nightmare",
+    enemyImage: "https://static.wikia.nocookie.net/kirby/images/e/ea/Kirby%27s_Adventure_Nightmare_Artwork.png",
+    totalQuestions: 10,
+    generateQuestion() {
+      const divisor = randomInt(1, 9);
+      const quotient = randomInt(1, 9);
+      const dividend = divisor * quotient;
+      return { prompt: `${dividend} ÷ ${divisor} = ?`, answer: quotient };
+    },
+  },
 ];
 
-const state = {
-  levelIndex: 0,
-  questionIndex: 0,
-  score: 0,
-  hearts: 3,
-  currentQuestion: null,
-};
+const state = { stageIndex: 0, questionIndex: 0, score: 0, lives: 3, currentQuestion: null };
 
 const el = {
-  levelName: document.querySelector("#level-name"),
+  stageBadge: document.querySelector("#stage-badge"),
+  stageName: document.querySelector("#stage-name"),
   questionIndex: document.querySelector("#question-index"),
-  questionTotal: document.querySelector("#question-total"),
   score: document.querySelector("#score"),
   hearts: document.querySelector("#hearts"),
+  stars: document.querySelector("#stars"),
+  enemy: document.querySelector("#enemy-name"),
+  enemyImage: document.querySelector("#enemy-image"),
+  bossHp: document.querySelector("#boss-hp"),
   kirbyMessage: document.querySelector("#kirby-message"),
+  kirbyAvatar: document.querySelector("#kirby-avatar"),
   question: document.querySelector("#question"),
   answer: document.querySelector("#answer"),
   feedback: document.querySelector("#feedback"),
+  celebration: document.querySelector("#celebration"),
   submitBtn: document.querySelector("#submit-btn"),
   nextBtn: document.querySelector("#next-btn"),
 };
@@ -72,50 +105,73 @@ function heartsText(count) {
   return "❤️".repeat(count) + "🖤".repeat(3 - count);
 }
 
-function getLevel() {
-  return levels[state.levelIndex];
+function currentStage() {
+  return stages[state.stageIndex];
 }
 
 function updateHud() {
-  const level = getLevel();
-  el.levelName.textContent = level.name;
+  const stage = currentStage();
+  el.stageBadge.textContent = `Stage ${state.stageIndex + 1}`;
+  el.stageName.textContent = stage.name;
   el.questionIndex.textContent = String(state.questionIndex + 1);
-  el.questionTotal.textContent = String(level.totalQuestions);
   el.score.textContent = String(state.score);
-  el.hearts.textContent = heartsText(state.hearts);
+  el.hearts.textContent = heartsText(state.lives);
+  el.stars.textContent = "✨".repeat(Math.max(1, Math.floor(state.score / 30) + 1));
+  el.enemy.textContent = stage.enemy;
+  el.enemyImage.src = stage.enemyImage;
+  el.enemyImage.alt = stage.enemy;
+  el.bossHp.max = stage.totalQuestions;
+  el.bossHp.value = stage.totalQuestions - state.questionIndex;
 }
 
-function setKirbyMessage(text) {
+function showCelebration() {
+  el.celebration.classList.remove("show");
+  void el.celebration.offsetWidth;
+  el.celebration.classList.add("show");
+  el.kirbyAvatar.classList.add("power");
+  setTimeout(() => el.kirbyAvatar.classList.remove("power"), 250);
+}
+
+function setMessage(text) {
   el.kirbyMessage.textContent = text;
 }
 
 function loadQuestion() {
-  const level = getLevel();
-  state.currentQuestion = level.generateQuestion();
+  const stage = currentStage();
+  state.currentQuestion = stage.generateQuestion();
   el.question.textContent = state.currentQuestion.prompt;
   el.answer.value = "";
   el.feedback.textContent = "";
   el.submitBtn.disabled = false;
   el.nextBtn.disabled = true;
-  el.answer.focus();
   updateHud();
+  el.answer.focus();
 }
 
-function advanceLevel() {
-  state.levelIndex += 1;
+function endGame(win) {
+  el.submitBtn.disabled = true;
+  el.nextBtn.disabled = true;
+  if (win) {
+    el.question.textContent = "🏆 Kirby saved Dream Land!";
+    el.feedback.textContent = `Amazing! Final score: ${state.score}`;
+    setMessage("Poyo poyo! You beat all 5 stages!");
+  } else {
+    el.question.textContent = "Game Over";
+    el.feedback.textContent = `Final score: ${state.score}`;
+    setMessage("Kirby says: Try again! You can do it!");
+  }
+}
+
+function nextStage() {
+  state.stageIndex += 1;
   state.questionIndex = 0;
 
-  if (state.levelIndex >= levels.length) {
-    el.question.textContent = "🎉 You beat every level!";
-    el.feedback.textContent = `Final score: ${state.score}`;
-    setKirbyMessage("Poyo! You're a math superstar! 🌟");
-    el.submitBtn.disabled = true;
-    el.nextBtn.disabled = true;
+  if (state.stageIndex >= stages.length) {
+    endGame(true);
     return;
   }
 
-  const next = getLevel().name;
-  setKirbyMessage(`Great job! Welcome to ${next} mode!`);
+  setMessage(`Stage ${state.stageIndex + 1} begins! ${currentStage().enemy} appears!`);
   loadQuestion();
 }
 
@@ -126,18 +182,19 @@ function checkAnswer() {
 
   const value = Number(el.answer.value);
   if (Number.isNaN(value)) {
-    el.feedback.textContent = "Please type a number first.";
+    el.feedback.textContent = "Type a number first!";
     return;
   }
 
   if (value === state.currentQuestion.answer) {
     state.score += 10;
-    el.feedback.textContent = "✅ Correct! Kirby is happy!";
-    setKirbyMessage("Yay! Keep going, math hero! ⭐");
+    el.feedback.textContent = "✅ Perfect hit!";
+    setMessage("Kirby used Star Blast! Great job!");
+    showCelebration();
   } else {
-    state.hearts -= 1;
-    el.feedback.textContent = `❌ Oops! Correct answer: ${state.currentQuestion.answer}`;
-    setKirbyMessage("You got this! Try the next one! 💪");
+    state.lives -= 1;
+    el.feedback.textContent = `❌ Miss! Correct: ${state.currentQuestion.answer}`;
+    setMessage("Oof! Keep going, hero!");
   }
 
   state.questionIndex += 1;
@@ -145,36 +202,31 @@ function checkAnswer() {
   el.submitBtn.disabled = true;
   el.nextBtn.disabled = false;
 
-  if (state.hearts <= 0) {
-    el.question.textContent = "Game over!";
-    el.feedback.textContent = `Kirby believes in you. Score: ${state.score}`;
-    setKirbyMessage("Let's play again and beat that score! 💖");
-    el.nextBtn.disabled = true;
+  if (state.lives <= 0) {
+    endGame(false);
   }
 }
 
-function nextQuestion() {
-  if (state.hearts <= 0) {
+function nextTurn() {
+  if (state.lives <= 0) {
     return;
   }
 
-  const level = getLevel();
-  if (state.questionIndex >= level.totalQuestions) {
-    advanceLevel();
-    return;
+  if (state.questionIndex >= currentStage().totalQuestions) {
+    nextStage();
+  } else {
+    loadQuestion();
   }
-
-  loadQuestion();
 }
 
 el.submitBtn.addEventListener("click", checkAnswer);
-el.nextBtn.addEventListener("click", nextQuestion);
+el.nextBtn.addEventListener("click", nextTurn);
 el.answer.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     if (!el.submitBtn.disabled) {
       checkAnswer();
     } else if (!el.nextBtn.disabled) {
-      nextQuestion();
+      nextTurn();
     }
   }
 });
