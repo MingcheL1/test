@@ -1,92 +1,65 @@
-const stages = [
+const levels = [
   {
-    name: "Within 10",
-    enemy: "Waddle Dee",
-    totalQuestions: 10,
+    name: "Easy",
+    totalQuestions: 5,
     generateQuestion() {
-      const add = Math.random() > 0.5;
-      if (add) {
+      const isAddition = Math.random() > 0.5;
+      if (isAddition) {
         const a = randomInt(0, 10);
         const b = randomInt(0, 10 - a);
         return { prompt: `${a} + ${b} = ?`, answer: a + b };
       }
+
       const a = randomInt(0, 10);
       const b = randomInt(0, a);
       return { prompt: `${a} - ${b} = ?`, answer: a - b };
     },
   },
   {
-    name: "Within 20",
-    enemy: "Bronto Burt",
-    totalQuestions: 10,
+    name: "Medium",
+    totalQuestions: 5,
     generateQuestion() {
-      const add = Math.random() > 0.5;
-      if (add) {
-        const a = randomInt(0, 20);
-        const b = randomInt(0, 20 - a);
+      const isAddition = Math.random() > 0.5;
+      if (isAddition) {
+        const a = randomInt(11, 60);
+        const b = randomInt(11, 100 - a);
         return { prompt: `${a} + ${b} = ?`, answer: a + b };
       }
-      const a = randomInt(0, 20);
-      const b = randomInt(0, a);
+
+      const a = randomInt(20, 100);
+      const b = randomInt(11, a - 1);
       return { prompt: `${a} - ${b} = ?`, answer: a - b };
     },
   },
   {
-    name: "Within 100",
-    enemy: "King Dedede",
-    totalQuestions: 10,
-    generateQuestion() {
-      const add = Math.random() > 0.5;
-      if (add) {
-        const a = randomInt(0, 100);
-        const b = randomInt(0, 100 - a);
-        return { prompt: `${a} + ${b} = ?`, answer: a + b };
-      }
-      const a = randomInt(0, 100);
-      const b = randomInt(0, a);
-      return { prompt: `${a} - ${b} = ?`, answer: a - b };
-    },
-  },
-  {
-    name: "Single Digit Multiply",
-    enemy: "Meta Knight",
-    totalQuestions: 10,
+    name: "Hard",
+    totalQuestions: 8,
     generateQuestion() {
       const a = randomInt(1, 9);
       const b = randomInt(1, 9);
       return { prompt: `${a} × ${b} = ?`, answer: a * b };
     },
   },
-  {
-    name: "Single Digit Divide",
-    enemy: "Nightmare",
-    totalQuestions: 10,
-    generateQuestion() {
-      const divisor = randomInt(1, 9);
-      const quotient = randomInt(1, 9);
-      const dividend = divisor * quotient;
-      return { prompt: `${dividend} ÷ ${divisor} = ?`, answer: quotient };
-    },
-  },
 ];
 
-const state = { stageIndex: 0, questionIndex: 0, score: 0, lives: 3, currentQuestion: null };
+const state = {
+  levelIndex: 0,
+  questionIndex: 0,
+  score: 0,
+  hearts: 3,
+  currentQuestion: null,
+};
 
 const el = {
-  stageBadge: document.querySelector("#stage-badge"),
-  stageName: document.querySelector("#stage-name"),
+  levelName: document.querySelector("#level-name"),
   questionIndex: document.querySelector("#question-index"),
+  questionTotal: document.querySelector("#question-total"),
   score: document.querySelector("#score"),
   hearts: document.querySelector("#hearts"),
-  stars: document.querySelector("#stars"),
-  enemy: document.querySelector("#enemy-name"),
-  bossHp: document.querySelector("#boss-hp"),
   kirbyMessage: document.querySelector("#kirby-message"),
-  kirbyAvatar: document.querySelector("#kirby-avatar"),
   question: document.querySelector("#question"),
   answer: document.querySelector("#answer"),
   feedback: document.querySelector("#feedback"),
-  celebration: document.querySelector("#celebration"),
   submitBtn: document.querySelector("#submit-btn"),
   nextBtn: document.querySelector("#next-btn"),
 };
@@ -99,71 +72,50 @@ function heartsText(count) {
   return "❤️".repeat(count) + "🖤".repeat(3 - count);
 }
 
-function currentStage() {
-  return stages[state.stageIndex];
+function getLevel() {
+  return levels[state.levelIndex];
 }
 
 function updateHud() {
-  const stage = currentStage();
-  el.stageBadge.textContent = `Stage ${state.stageIndex + 1}`;
-  el.stageName.textContent = stage.name;
+  const level = getLevel();
+  el.levelName.textContent = level.name;
   el.questionIndex.textContent = String(state.questionIndex + 1);
+  el.questionTotal.textContent = String(level.totalQuestions);
   el.score.textContent = String(state.score);
-  el.hearts.textContent = heartsText(state.lives);
-  el.stars.textContent = "✨".repeat(Math.max(1, Math.floor(state.score / 30) + 1));
-  el.enemy.textContent = stage.enemy;
-  el.bossHp.max = stage.totalQuestions;
-  el.bossHp.value = stage.totalQuestions - state.questionIndex;
+  el.hearts.textContent = heartsText(state.hearts);
 }
 
-function showCelebration() {
-  el.celebration.classList.remove("show");
-  void el.celebration.offsetWidth;
-  el.celebration.classList.add("show");
-  el.kirbyAvatar.classList.add("power");
-  setTimeout(() => el.kirbyAvatar.classList.remove("power"), 250);
-}
-
-function setMessage(text) {
+function setKirbyMessage(text) {
   el.kirbyMessage.textContent = text;
 }
 
 function loadQuestion() {
-  const stage = currentStage();
-  state.currentQuestion = stage.generateQuestion();
+  const level = getLevel();
+  state.currentQuestion = level.generateQuestion();
   el.question.textContent = state.currentQuestion.prompt;
   el.answer.value = "";
   el.feedback.textContent = "";
   el.submitBtn.disabled = false;
   el.nextBtn.disabled = true;
-  updateHud();
   el.answer.focus();
+  updateHud();
 }
 
-function endGame(win) {
-  el.submitBtn.disabled = true;
-  el.nextBtn.disabled = true;
-  if (win) {
-    el.question.textContent = "🏆 Kirby saved Dream Land!";
-    el.feedback.textContent = `Amazing! Final score: ${state.score}`;
-    setMessage("Poyo poyo! You beat all 5 stages!");
-  } else {
-    el.question.textContent = "Game Over";
-    el.feedback.textContent = `Final score: ${state.score}`;
-    setMessage("Kirby says: Try again! You can do it!");
-  }
-}
-
-function nextStage() {
-  state.stageIndex += 1;
+function advanceLevel() {
+  state.levelIndex += 1;
   state.questionIndex = 0;
 
-  if (state.stageIndex >= stages.length) {
-    endGame(true);
+  if (state.levelIndex >= levels.length) {
+    el.question.textContent = "🎉 You beat every level!";
+    el.feedback.textContent = `Final score: ${state.score}`;
+    setKirbyMessage("Poyo! You're a math superstar! 🌟");
+    el.submitBtn.disabled = true;
+    el.nextBtn.disabled = true;
     return;
   }
 
-  setMessage(`Stage ${state.stageIndex + 1} begins! ${currentStage().enemy} appears!`);
+  const next = getLevel().name;
+  setKirbyMessage(`Great job! Welcome to ${next} mode!`);
   loadQuestion();
 }
 
@@ -174,19 +126,18 @@ function checkAnswer() {
 
   const value = Number(el.answer.value);
   if (Number.isNaN(value)) {
-    el.feedback.textContent = "Type a number first!";
+    el.feedback.textContent = "Please type a number first.";
     return;
   }
 
   if (value === state.currentQuestion.answer) {
     state.score += 10;
-    el.feedback.textContent = "✅ Perfect hit!";
-    setMessage("Kirby used Star Blast! Great job!");
-    showCelebration();
+    el.feedback.textContent = "✅ Correct! Kirby is happy!";
+    setKirbyMessage("Yay! Keep going, math hero! ⭐");
   } else {
-    state.lives -= 1;
-    el.feedback.textContent = `❌ Miss! Correct: ${state.currentQuestion.answer}`;
-    setMessage("Oof! Keep going, hero!");
+    state.hearts -= 1;
+    el.feedback.textContent = `❌ Oops! Correct answer: ${state.currentQuestion.answer}`;
+    setKirbyMessage("You got this! Try the next one! 💪");
   }
 
   state.questionIndex += 1;
@@ -194,31 +145,36 @@ function checkAnswer() {
   el.submitBtn.disabled = true;
   el.nextBtn.disabled = false;
 
-  if (state.lives <= 0) {
-    endGame(false);
+  if (state.hearts <= 0) {
+    el.question.textContent = "Game over!";
+    el.feedback.textContent = `Kirby believes in you. Score: ${state.score}`;
+    setKirbyMessage("Let's play again and beat that score! 💖");
+    el.nextBtn.disabled = true;
   }
 }
 
-function nextTurn() {
-  if (state.lives <= 0) {
+function nextQuestion() {
+  if (state.hearts <= 0) {
     return;
   }
 
-  if (state.questionIndex >= currentStage().totalQuestions) {
-    nextStage();
-  } else {
-    loadQuestion();
+  const level = getLevel();
+  if (state.questionIndex >= level.totalQuestions) {
+    advanceLevel();
+    return;
   }
+
+  loadQuestion();
 }
 
 el.submitBtn.addEventListener("click", checkAnswer);
-el.nextBtn.addEventListener("click", nextTurn);
+el.nextBtn.addEventListener("click", nextQuestion);
 el.answer.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     if (!el.submitBtn.disabled) {
       checkAnswer();
     } else if (!el.nextBtn.disabled) {
-      nextTurn();
+      nextQuestion();
     }
   }
 });
